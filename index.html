@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+    <title>Bootstrap 4 Blog Template For Developers</title>
+    
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Blog Template">
+    <meta name="author" content="Xiaoying Riley at 3rd Wave Media">    
+    <link rel="shortcut icon" href="favicon.ico"> 
+    
+    <!-- FontAwesome JS-->
+    <script defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
+    
+    <!-- Theme CSS -->  
+    <link id="theme-style" rel="stylesheet" href="assets/css/theme-1.css">
+    <style>
+    	li {
+    	  line-height: 1.5;
+    	  margin-bottom: 10px;
+    	}
+
+    	li a {
+    	  color: #0077b6;
+    	  text-decoration: none;
+    	  transition: color 0.3s ease;
+    	}
+
+    	li a:hover {
+    	  color: #005a8e;
+    	}
+
+    	/* Hover effect */
+    	li a:before {
+    	  content: "";
+    	  position: absolute;
+    	  width: 0;
+    	  height: 2px;
+    	  background-color: #0077b6;
+    	  bottom: 0;
+    	  left: 0;
+    	  transition: width 0.3s ease;
+    	}
+
+    	li a:hover:before {
+    	  width: 100%;
+    	}
+
+    </style>
+</head> 
+
+<body>
+    <header class="header text-center">	    
+	    <h1 class="blog-name pt-lg-4 mb-0"><a href="index.html">Anthony's Blog</a></h1>
+        
+	    <nav class="navbar navbar-expand-lg navbar-dark" >
+           
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div id="navigation" class="collapse navbar-collapse flex-column" >
+				<div class="profile-section pt-3 pt-lg-0">
+				    <img class="profile-image mb-3 rounded-circle mx-auto" src="assets/images/profile.png" alt="image" >			
+					
+					<div class="bio mb-3">Hi, my name is Anthony Doe. Briefly introduce yourself here. You can also provide a link to the about page.<br><a href="about.html">Find out more about me</a></div><!--//bio-->
+					<ul class="social-list list-inline py-3 mx-auto">
+			            <li class="list-inline-item"><a href="#"><i class="fab fa-twitter fa-fw"></i></a></li>
+			            <!-- <li class="list-inline-item"><a href="#"><i class="fab fa-linkedin-in fa-fw"></i></a></li> -->
+			            <li class="list-inline-item"><a href="#"><i class="fab fa-github-alt fa-fw"></i></a></li>
+			            <!-- <li class="list-inline-item"><a href="#"><i class="fab fa-stack-overflow fa-fw"></i></a></li> -->
+			            <!-- <li class="list-inline-item"><a href="#"><i class="fab fa-codepen fa-fw"></i></a></li> -->
+			        </ul><!--//social-list-->
+			        <hr> 
+				</div><!--//profile-section-->
+				
+				<ul class="navbar-nav flex-column text-left">
+					<li class="nav-item active">
+					    <a class="nav-link" href="index.html"><i class="fas fa-home fa-fw mr-2"></i>Blog Home <span class="sr-only">(current)</span></a>
+					</li>
+					<li class="nav-item">
+					    <a class="nav-link" href="blog-post.html"><i class="fas fa-bookmark fa-fw mr-2"></i>Blog Post</a>
+					</li>
+					<li class="nav-item">
+					    <a class="nav-link" href="about.html"><i class="fas fa-user fa-fw mr-2"></i>About Me</a>
+					</li>
+				</ul>
+				
+				<div class="my-2 my-md-3">
+				    <a class="btn btn-primary" href="https://themes.3rdwavemedia.com/" target="_blank">Get in Touch</a>
+				</div>
+			</div>
+		</nav>
+    </header>
+    
+    <div class="main-wrapper">
+	    <section class="cta-section theme-bg-light py-5">
+		    <div class="container text-center">
+			    <h2 class="heading">DevBlog - A Blog Template Made For Developers</h2>
+			    <div class="intro">Welcome to my blog. Subscribe and get my latest blog post in your inbox.</div>
+			    <form class="signup-form form-inline justify-content-center pt-3">
+                    <div class="form-group">
+                        <label class="sr-only" for="semail">Your email</label>
+                        <input type="email" id="semail" name="semail1" class="form-control mr-md-1 semail" placeholder="Enter email">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Subscribe</button>
+                </form>
+		    </div><!--//container-->
+	    </section>
+	    <section class="blog-list px-3 py-5 p-md-5">
+		    <div class="container">
+		<ul>
+		  <li>
+		    <a href="./posts/blog-post.html">The list of monoids pattern</a>
+		</li>
+		<li>
+		    <a href="./posts/2020-12-23-monad-transformers-and-effects-with-backpack.html">Monad Transformers and Effects with Backpack</a>
+		</li>
+		<li>
+		    <a href="./posts/2019-08-09-who-authorized-these-ghosts.html">Who Authorized These Ghosts!?</a>
+		</li>
+		<li>
+		    <a href="./posts/2018-12-25-fast-downward.html">Solving Planning Problems with Fast Downward and Haskell</a>
+		</li>
+		<li>
+		    <a href="./posts/2017-08-23-extensible-effects-and-transformers.html">Providing an API for extensible-effects and monad transformers</a>
+		</li>
+		<li>
+		    <a href="./posts/2016-04-23-transformers-eff.html">Announcing transformers-eff</a>
+		</li>
+		<li>
+		    <a href="./posts/2016-01-26-transformers-free-monads-mtl-laws.html">Monad transformers, free monads, mtl, laws and a new approach</a>
+		</li>
+		<li>
+		    <a href="./posts/2015-09-07-announcing-sdl2.html">Announcing a new set of high-level SDL2 bindings</a>
+		</li>
+		<li>
+		    <a href="./posts/2015-07-23-another-approach-to-default-variables.html">Another Approach to Default Function Parameters</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-24-conclusion.html">24 Days of GHC Extensions: Thanks!</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-23-static-pointers.html">24 Days of GHC Extensions: Static Pointers</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-22-template-haskell.html">24 Days of GHC Extensions: Template Haskell</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-21-arrows.html">24 Days of GHC Extensions: Arrows</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-20-scoped-type-variables.html">24 Days of GHC Extensions: Scoped Type Variables</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-19-existential-quantification.html">24 Days of GHC Extensions: Existential Quantification</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-18-rank-n-types.html">24 Days of GHC Extensions: Rank N Types</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-17-overloaded-strings.html">24 Days of GHC Extensions: Overloaded Strings</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-16-derive-generic.html">24 Days of GHC Extensions: DeriveGeneric</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-15-deriving.html">24 Days of GHC Extensions: Deriving</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-14-functional-dependencies.html">24 Days of GHC Extensions: Functional Dependencies</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-13-multi-param-type-classes.html">24 Days of GHC Extensions: Multi-parameter Type Classes</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-12-type-families.html">24 Days of GHC Extensions: Type Families</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-11-implicit-params.html">24 Days of GHC Extensions: Implicit Parameters</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-10-nullary-type-classes.html">24 Days of GHC Extensions: Nullary Type Classes</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-09-recursive-do.html">24 Days of GHC Extensions: Recursive Do</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-08-type-operators.html">24 Days of GHC Extensions: Type Operators</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-07-list-comprehensions.html">24 Days of GHC Extensions: List Comprehensions</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2014-12-06-rebindable-syntax.html">24 Days of GHC Extensions: Rebindable Syntax</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-05-bang-patterns.html">24 Days of GHC Extensions: Bang Patterns</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-04-record-wildcards.html">24 Days of GHC Extensions: Record Wildcards</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-03-pattern-synonyms.html">24 Days of GHC Extensions: Pattern Synonyms</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-02-view-patterns.html">24 Days of GHC Extensions: View Patterns</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-12-01-24-days-of-ghc-extensions.html">24 Days of GHC Extensions: Welcome!</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-11-11-memo-html.html">Self-Memoizing HTML Rendering via Mutually Recursive Data Types</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-08-07-postgresql-simple-generic-sop.html">Working with postgresql-simple with generics-sop</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-07-13-announcing-socket-io-for-haskell.html">Announcing engine-io and socket-io for Haskell</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-06-10-reversible-serialization.html">A Category for Correct-By-Construction Serializers and Deserializers</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-05-28-pure-batched-queries.html">A Batch Querying Applicative Functor Without IORefs</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-05-02-well-typed-guide-haskell-type-system.html">Well Typed's "The Haskell Type System" Course</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-04-26-constructing-generically.html">Building data constructors with GHC Generics</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-03-24-queries-in-loops-without-a-care-in-the-world.html">Queries in Loops Without a Care in the World</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-02-25-dependent-types-and-plhaskell.html">Interpreting Haskell Inside PostgreSQL With Singleton Types</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-02-04-how-i-develop-with-nixos.html">How I Develop with Nix</a>
+		</li>
+		<li>
+		    <a href="./posts/2014-01-20-announcing-tasty-rerun.html">Announcing tasty-rerun</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-24-24-days-of-hackage-charts.html">24 Days of Hackage: Charts and Conclusion</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-23-24-days-of-hackage-fay.html">24 Days of Hackage: fay</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2013-12-22-24-days-of-hackage-profunctors.html">24 Days of Hackage: profunctors</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2013-12-21-24-days-of-hackage-contravariant.html">24 Days of Hackage: contravariant</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-20-24-days-of-hackage-web-routes-boomerang.html">24 Days of Hackage: web-routes-boomerang</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-19-websockets.html">24 Days of Hackage: websockets</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-18-doctest.html">24 Days of Hackage: doctest</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-17-24-days-of-hackage-unordered-containers.html">24 Days of Hackage: unordered-containers</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-16-24-days-of-hackage-repa.html">24 Days of Hackage: repa</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-15-24-days-of-hackage-time.html">24 Days of Hackage: time</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-14-24-days-of-hackage-acid-state.html">24 Days of Hackage: acid-state</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-13-24-days-of-hackage-async.html">24 Days of Hackage: async</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2013-12-12-24-days-of-hackage-pandoc.html">24 Days of Hackage: pandoc</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-11-24-days-of-hackage-heist.html">24 Days of Hackage: heist</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-10-24-days-of-hackage-gloss.html">24 Days of Hackage: gloss</a>
+		</li>
+		<li>
+		    <a href="./guest-posts/2013-12-09-24-days-of-hackage-sbv.html">24 Days of Hackage: sbv</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-08-24-days-of-hackage-data-memocombinators.html">24 Days of Hackage: data-memocombinators</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-07-24-days-of-hackage-threepenny-gui.html">24 Days of Hackage: threepenny-gui</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-06-24-days-of-hackage-persistent-esqueleto.html">24 Days of Hackage: persistent & esqueleto</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-05-24-days-of-hackage-scotty.html">24 Days of Hackage: scotty</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-04-24-days-of-hackage-extensible-effects.html">24 Days of Hackage: extensible-effects</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-03-24-days-of-hackage-tasty.html">24 Days of Hackage: tasty</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-02-24-days-of-hackage-linear.html">24 Days of Hackage: linear</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-12-01-24-days-of-hackage-intro.html">24 Days of Hackage: 2013 in Review</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-11-24-using-indexed-free-monads-to-quickcheck-json.html">Using indexed free monads to QuickCheck JSON</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-11-06-24-days-of-hackage-2013.html">24 Days of Hackage 2013</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-10-23-pipes-talk.html">September pipes talk</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-08-18-asteroids-in-netwire.html">Asteroids & Netwire</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-08-01-getting-started-with-netwire-and-sdl.html">Getting Started with Netwire and SDL</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-07-26-a-comparison-between-perl-and-haskell.html">A Comparison Between Perl and Haskell</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-04-09-data-type-generic-programming.html">Datatype Generic Programming</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-02-12-quick-dsls-with-endo-writers.html">Quick and Easy DSLs with Writer Endo</a>
+		</li>
+		<li>
+		    <a href="./posts/2013-01-22-deriving-traversals.html">Composing Traversals: A Worked Example of Deriving a Non-Trivial Traversal</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-24-24-days-of-hackage.html">24 Days of Hackage</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-23-24-days-of-hackage-base.html">24 Days of Hackage: base</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-22-24-days-of-hackage-blaze.html">24 Days of Hackage: blaze-html</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-21-24-days-of-hackage-configurator.html">24 Days of Hackage: configurator</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-20-24-days-of-hackage-transformers.html">24 Days of Hackage: transformers</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-19-24-days-of-hackage-snap.html">24 Days of Hackage: snap</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-18-24-days-of-hackage-criterion.html">24 Days of Hackage: criterion</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-17-24-days-of-hackage-optparse-applicative.html">24 Days of Hackage: optparse-applicative</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-16-24-days-of-hackage-pipes.html">24 Days of Hackage: pipes</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-15-24-days-of-hackage-haskelldb.html">24 Days of Hackage: haskelldb</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-14-24-days-of-hackage-dlist.html">24 Days of Hackage: dlist</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-12-24-days-of-hackage-text.html">24 Days of Hackage: text</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-11-24-day-of-hackage-ekg.html">24 Days of Hackage: EKG</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-10-24-days-of-hackage-parsec.html">24 Days of Hackage: parsec</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-09-24-days-of-hackage-lens.html">24 Days of Hackage: lens</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-08-24-days-of-hackage.html">24 Days of Hackage: QuickCheck</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-07-24-days-of-hackage-aeson.html">24 Days of Hackage: aeson</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-06-containers.html">24 Days of Hackage: containers</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-05-24-days-of-hackage-hlint.html">24 Days of Hackage: HLint</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-04-errors.html">24 Days of Hackage: errors</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-03-postgresql-simple.html">24 Days of Hackage: postgresql-simple</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-02-digestive-functors.html">24 Days of Hackage: digestive-functors</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-12-01-24-days-of-hackage.html">24 Days of Hackage: Cabal</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-08-05-announcing-raskell.html">Announcing Raskell</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-07-24-in-praise-of-EitherT.html">In Praise of EitherT</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-07-20-nes-does-it-better-2.html">NES Does it Better: Building NES</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-07-12-musicbrainz-database-abstraction-choices.html">A New Database Abstraction Layer</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-07-10-nes-does-it-better-1.html">NES Does It Better: Introducing the New Edit System</a>
+		</li>
+		<li>
+		    <a href="./posts/2012-07-09-leaving-gentoo.html">Leaving Gentoo</a>
+		</li>
+		<li>
+		    <a href="./posts/2011-11-29-crowdsourcing-organization.html">Crowdsourcing Organization</a>
+		</li>
+		<li>
+		    <a href="./posts/2011-07-28-git-in-pg.html">Versioning Multiple Versions of Data in Relational Databases</a>
+		</li>
+		<li>
+		    <a href="./posts/2010-12-15-sorting-subjective-media-competitively.html">Sorting Subjective Media Competitively</a>
+		</li>
+		<li>
+		    <a href="./posts/2010-11-28-optimizing-perl.html">A Journey of Optimizing Perl</a>
+		</li>
+		<li>
+		    <a href="./posts/2010-11-24-factories-in-perl.html">Implementing Factories in Perl</a>
+		</li>
+		<li>
+		    <a href="./posts/2010-11-19-magpie.html">Introducing Magpie: Flexible Test Doubles & Mocking for Perl</a>
+		</li>
+		<li>
+		    <a href="./posts/2010-04-03-sql-is-data-not-a-string.html">SQL: It's Data, Not a String</a>
+		</li>
+
+		</ul>
+			    
+			    <nav class="blog-nav nav nav-justified my-5">
+				  <a class="nav-link-prev nav-item nav-link rounded-left d-none" href="#" id="last-year">Previous<i class="arrow-prev fas fa-long-arrow-alt-left"></i></a>
+				  <a class="nav-link-next nav-item nav-link rounded d-none" href="#" id="next-year">Next<i class="arrow-next fas fa-long-arrow-alt-right"></i></a>
+				</nav>
+				
+		    </div>
+	    </section>
+	    
+	    <footer class="footer text-center py-2 theme-bg-dark">
+		   
+	        <!--/* This template is released under the Creative Commons Attribution 3.0 License. Please keep the attribution link below when using for your own project. Thank you for your support. :) If you'd like to use the template without the attribution, you can buy the commercial license via our website: themes.3rdwavemedia.com */-->
+                <small class="copyright">Designed with <i class="fas fa-heart" style="color: #fb866a;"></i> by <a href="http://themes.3rdwavemedia.com" target="_blank">Xiaoying Riley</a> for developers</small>
+		   
+	    </footer>
+    
+    </div><!--//main-wrapper-->
+    
+    
+    
+    
+    <!-- *****CONFIGURE STYLE (REMOVE ON YOUR PRODUCTION SITE)****** -->  
+    <div id="config-panel" class="config-panel d-none d-lg-block">
+        <div class="panel-inner">
+            <a id="config-trigger" class="config-trigger config-panel-hide text-center" href="#"><i class="fas fa-cog fa-spin mx-auto" data-fa-transform="down-6" ></i></a>
+            <h5 class="panel-title">Choose Colour</h5>
+            <ul id="color-options" class="list-inline mb-0">
+                <li class="theme-1 active list-inline-item"><a data-style="assets/css/theme-1.css" href="#"></a></li>
+                <li class="theme-2  list-inline-item"><a data-style="assets/css/theme-2.css" href="#"></a></li>
+                <li class="theme-3  list-inline-item"><a data-style="assets/css/theme-3.css" href="#"></a></li>
+                <li class="theme-4  list-inline-item"><a data-style="assets/css/theme-4.css" href="#"></a></li>
+                <li class="theme-5  list-inline-item"><a data-style="assets/css/theme-5.css" href="#"></a></li>
+                <li class="theme-6  list-inline-item"><a data-style="assets/css/theme-6.css" href="#"></a></li>
+                <li class="theme-7  list-inline-item"><a data-style="assets/css/theme-7.css" href="#"></a></li>
+                <li class="theme-8  list-inline-item"><a data-style="assets/css/theme-8.css" href="#"></a></li>
+            </ul>
+            <a id="config-close" class="close" href="#"><i class="fa fa-times-circle"></i></a>
+        </div><!--//panel-inner-->
+    </div><!--//configure-panel-->
+
+    
+       
+    <!-- Javascript -->          
+    <script src="assets/plugins/jquery-3.3.1.min.js"></script>
+    <script src="assets/plugins/popper.min.js"></script> 
+    <script src="assets/plugins/bootstrap/js/bootstrap.min.js"></script> 
+
+    <!-- Style Switcher (REMOVE ON YOUR PRODUCTION SITE) -->
+    <script src="assets/js/demo/style-switcher.js"></script>     
+    
+    <script>
+    	function nextYear() {
+  			const currentYear = new Date().getFullYear();
+  			const postLink = document.getElementById('next-year');
+  			postLink.href = `./pages/${currentYear}/index.html`
+		}
+
+		// Call the function to update the link
+		nextYear();
+
+		function lastYear() {
+		  const currentYear = new Date().getFullYear();
+		  const previousYear = currentYear - 1;
+		  const postLink = document.getElementById('last-year');
+		  postLink.href = `../${previousYear}/index.html`
+		}
+
+		// Call the function to update the link
+		lastYear();
+    </script>
+</body>
+</html> 
+

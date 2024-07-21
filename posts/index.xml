@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Hugo Theme Stack Starter</title><link>https://fa5tworm.github.io/posts/</link><description>Recent content in Posts on Hugo Theme Stack Starter</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 21 Jul 2024 21:14:10 +0100</lastBuildDate><atom:link href="https://fa5tworm.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>My First Post</title><link>https://fa5tworm.github.io/posts/my-first-post/</link><pubDate>Sun, 21 Jul 2024 21:14:10 +0100</pubDate><guid>https://fa5tworm.github.io/posts/my-first-post/</guid><description>&lt;p>Welcome to my first post! This is an example of a Hugo post using the Stack theme.&lt;/p>
+&lt;h2 id="section-1">Section 1
+&lt;/h2>&lt;p>Here&amp;rsquo;s some content for the first section.&lt;/p>
+&lt;h2 id="section-2">Section 2
+&lt;/h2>&lt;p>Here&amp;rsquo;s some more content for the second section.&lt;/p>
+&lt;h3 id="subsection">Subsection
+&lt;/h3>&lt;p>This is a subsection with more details.&lt;/p>
+&lt;p>&lt;img src="https://via.placeholder.com/150"
+loading="lazy"
+alt="Image"
+>&lt;/p>
+&lt;p>Here&amp;rsquo;s an example image.&lt;/p></description></item></channel></rss>

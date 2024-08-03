@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+  
+<!-- Mirrored from blog.ocharles.org.uk/posts/2018-12-25-fast-downward.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 01 Aug 2024 22:56:51 GMT -->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Solving Planning Problems with Fast Downward and Haskell</title>
+    <!-- <link rel="stylesheet" type="text/css" href="/css/reset.css" /> -->
+    <!-- <link rel="stylesheet" type="text/css" href="/css/typography.css" /> -->
+    <link rel="stylesheet" type="text/css" href="../css/syntax-highlighting.css" />
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="../posts.rss">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:300,100" rel="stylesheet" type="text/css">
+    <style>
+    /*! Typebase.less v0.1.0 | MIT License */
+    /* Setup */
+    html {
+      /* Change default typefaces here */
+      font-size: 125%;
+      -webkit-font-smoothing: antialiased;
+      font-family: 'Roboto Slab', serif;
+      font-weight: 300;
+    }
+    /* Copy & Lists */
+    p, pre {
+      line-height: 1.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0;
+    }
+    ul,
+    ol {
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    ul li,
+    ol li {
+      line-height: 1.5rem;
+    }
+    ul ul,
+    ol ul,
+    ul ol,
+    ol ol {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    blockquote {
+      line-height: 1.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    /* Headings */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      /* Change heading typefaces here */
+      font-weight: 100;
+      margin-top: 1.5rem;
+      margin-bottom: 0;
+      line-height: 1.5rem;
+    }
+    h1 {
+      font-size: 3.242rem;
+      line-height: 4.5rem;
+      margin-top: 3rem;
+      text-align: center;
+      padding-bottom: 1.5rem;
+    }
+    h2 {
+      font-size: 2.828rem;
+      line-height: 3rem;
+      margin-top: 3rem;
+    }
+    h3 {
+      font-size: 1.414rem;
+    }
+    h4 {
+      font-size: 0.707rem;
+    }
+    h5 {
+      font-size: 0.4713333333333333rem;
+    }
+    h6 {
+      font-size: 0.3535rem;
+    }
+    /* Tables */
+    table {
+      margin-top: 1.5rem;
+      border-spacing: 0px;
+      border-collapse: collapse;
+    }
+    table td,
+    table th {
+      padding: 0;
+      line-height: 33px;
+    }
+    /* Leading paragraph text */
+    .lead {
+      font-size: 1.414rem;
+    }
+    /* Hug the block above you */
+    .hug {
+      margin-top: 0;
+    }
+
+    html {
+      background: #eae3cb;
+    }
+    body {
+      background-color: #fcf4dc;
+      width: 40em;
+      margin: 0 auto 2em;
+      padding: 2em 3em;
+      border: 1px solid #d9d2ba;
+      border-top: none;
+      color: #111;
+    }
+    h1 {
+      border-bottom: 1px solid #555;
+      /*text-align: center;
+      padding-bottom: 10px;*/
+    }
+    /* h2,h3 { margin-top: 2em } */
+    ul#icons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      list-style-type: none;
+      text-align: right;
+    }
+    ul#icons img { width: 16px; vertical-align: middle; }
+    ul#icons a { color: transparent; font-style: italic; font-size: small; }
+    ul#icons li:hover a { color: #aaa; text-decoration: none !important}
+    #TOC { display: none; }
+    pre {
+      border-bottom: 1px dotted #d9d2ba;
+      border-top: 1px dotted #d9d2ba;
+    }
+     a {
+         text-decoration: none;
+     }
+    </style>
+  </head>
+  <body>
+    <h1>Solving Planning Problems with Fast Downward and Haskell</h1>
+<p>In this post I’ll demonstrate my new <a href="https://hackage.haskell.org/package/fast-downward"><code>fast-downward</code></a> library and show how it can be used to solve planning problems. The name comes from the use of the backend solver - <a href="http://fast-downward.org/">Fast Downward</a>. But what’s a planning problem?</p>
+<p>Roughly speaking, planning problems are a subclass of AI problems where we need to work out a <em>plan</em> that moves us from an initial state to some goal state. Typically, we have:</p>
+<ul>
+<li>A known <em>starting state</em> - information about the world we know to be true right now.</li>
+<li>A set of possible <em>effects</em> - deterministic ways we can change the world.</li>
+<li>A <em>goal</em> state that we wish to reach.</li>
+</ul>
+<p>With this, we need to find a plan:</p>
+<ul>
+<li>A <em>solution</em> to a planning problem is a <em>plan</em> - a totally ordered sequence of steps that converge the starting state into the goal state.</li>
+</ul>
+<p>Planning problems are essentially <a href="https://en.wikipedia.org/wiki/State_space_search">state space search</a> problems, and crop up in all sorts of places. The common examples are that of moving a robot around, planning logistics problems, and so on, but they can be used for plenty more! For example, the <a href="http://tathougies.github.io/beam/">Beam</a> library uses state space search to work out how to converge a database from one state to another (automatic migrations) by adding/removing columns.</p>
+<p>State space search is an intuitive approach - simply build a graph where nodes are states and edges are state transitions (effects), and find a path (possibly shortest) that gets you from the starting state to a state that satisfies some predicates. However, naive enumeration of all states rapidly grinds to a halt. Forming optimal plans (least cost, least steps, etc) is an extremely difficult problem, and there is a <em>lot</em> of literature on the topic (see <a href="http://icaps-conference.org/">ICAPS</a> - the International Conference on Automated Planning and Scheduling and recent <a href="https://ipc2018.bitbucket.io/">International Planning Competitions</a> for an idea of the state of the art). The <code>fast-downward</code> library uses the state of the art Fast Downward solver and provides a small DSL to interface to it with Haskell.</p>
+<p>In this post, we’ll look at using <code>fast-downward</code> in the context of solving a small planning problem - moving balls between rooms via a robot. This post is literate Haskell, here’s the context we’ll be working in:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# language DisambiguateRecordFields #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">FastDownward.Examples.Gripper</span> <span class="kw">where</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">FastDownward.Exec</span> <span class="kw">as</span> <span class="dt">Exec</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">FastDownward.Problem</span></span></code></pre></div>
+<p>If you’d rather see the Haskell in it’s entirety without comments, simply head to the end of this post.</p>
+<h2 id="modelling-the-problem">Modelling The Problem</h2>
+<h3 id="defining-the-domain">Defining the Domain</h3>
+<p>As mentioned, in this example, we’ll consider the problem of transporting balls between rooms via a robot. The robot has two grippers and can move between rooms. Each gripper can hold zero or one balls. Our initial state is that everything is in room A, and our goal is to move all balls to room B.</p>
+<p>First, we’ll introduce some domain specific types and functions to help model the problem. The <code>fast-downward</code> DSL can work with any type that is an instance of <code>Ord</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Room</span> <span class="ot">=</span> <span class="dt">RoomA</span> <span class="op">|</span> <span class="dt">RoomB</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">adjacent ::</span> <span class="dt">Room</span> <span class="ot">-&gt;</span> <span class="dt">Room</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>adjacent <span class="dt">RoomA</span> <span class="ot">=</span> <span class="dt">RoomB</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>adjacent <span class="dt">RoomB</span> <span class="ot">=</span> <span class="dt">RoomA</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">BallLocation</span> <span class="ot">=</span> <span class="dt">InRoom</span> <span class="dt">Room</span> <span class="op">|</span> <span class="dt">InGripper</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">GripperState</span> <span class="ot">=</span> <span class="dt">Empty</span> <span class="op">|</span> <span class="dt">HoldingBall</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</span></code></pre></div>
+<p>A ball in our model is modelled by its current location. As this changes over time, it is a <code>Var</code> - a state variable.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Ball</span> <span class="ot">=</span> <span class="dt">Var</span> <span class="dt">BallLocation</span></span></code></pre></div>
+<p>A gripper in our model is modelled by its state - whether or not it’s holding a ball.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Gripper</span> <span class="ot">=</span> <span class="dt">Var</span> <span class="dt">GripperState</span></span></code></pre></div>
+<p>Finally, we’ll introduce a type of all possible actions that can be taken:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Action</span> <span class="ot">=</span> <span class="dt">PickUpBall</span> <span class="op">|</span> <span class="dt">SwitchRooms</span> <span class="op">|</span> <span class="dt">DropBall</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
+<p>With this, we can now begin modelling the specific <em>instance</em> of the problem. We do this by working in the <code>Problem</code> monad, which lets us introduce variables (<code>Var</code>s) and specify their initial state.</p>
+<h3 id="setting-the-initial-state">Setting the Initial State</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">problem ::</span> <span class="dt">Problem</span> (<span class="dt">SolveResult</span> <span class="dt">Action</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>problem <span class="ot">=</span> <span class="kw">do</span></span></code></pre></div>
+<p>First, we introduce a state variable for each of the 4 balls. As in the problem description, all balls are initially in room A.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  balls <span class="ot">&lt;-</span> replicateM <span class="dv">4</span> (newVar (<span class="dt">InRoom</span> <span class="dt">RoomA</span>))</span></code></pre></div>
+<p>Next, introduce a variable for the room the robot is in - which also begins in room A.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  robotLocation <span class="ot">&lt;-</span> newVar <span class="dt">RoomA</span></span></code></pre></div>
+<p>We also introduce variables to track the state of each gripper.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  grippers <span class="ot">&lt;-</span> replicateM <span class="dv">2</span> (newVar <span class="dt">Empty</span>)</span></code></pre></div>
+<p>This is sufficient to model our problem. Next, we’ll define some effects to change the state of the world.</p>
+<h3 id="defining-effects">Defining Effects</h3>
+<p>Effects are computations in the <code>Effect</code> monad - a monad that allows us to read and write to variables, and also fail (via <code>MonadPlus</code>). We could define these effects as top-level definitions (which might be better if we were writing a library), but here I’ll just define them inline so they can easily access the above state variables.</p>
+<p>Effects may be used at any time by the solver. Indeed, that’s what solving planning problems is all about! The hard part is choosing effects intelligently, rather than blindly trying everything. Fortunately, you don’t need to worry about that - Fast Downward will take care of that for you!</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span></span></code></pre></div>
+<h4 id="picking-up-balls">Picking Up Balls</h4>
+<p>The first effect takes a ball and a gripper, and attempts to pick up that ball with that gripper.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">    pickUpBallWithGripper ::</span> <span class="dt">Ball</span> <span class="ot">-&gt;</span> <span class="dt">Gripper</span> <span class="ot">-&gt;</span> <span class="dt">Effect</span> <span class="dt">Action</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    pickUpBallWithGripper b gripper <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Empty</span> <span class="ot">&lt;-</span> readVar gripper                  <span class="co">-- (1)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>      robotRoom <span class="ot">&lt;-</span> readVar robotLocation        <span class="co">-- (2)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      ballLocation <span class="ot">&lt;-</span> readVar b</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>      guard (ballLocation <span class="op">==</span> <span class="dt">InRoom</span> robotRoom)  <span class="co">-- (3)</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>      writeVar b <span class="dt">InGripper</span>                      <span class="co">-- (4)</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>      writeVar gripper <span class="dt">HoldingBall</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span> <span class="dt">PickUpBall</span>                         <span class="co">-- (5)</span></span></code></pre></div>
+<ol type="1">
+<li><p>First we check that the gripper is empty. This can be done concisely by using an incomplete pattern match. <code>do</code> notation desugars incomplete pattern matches to a call to <code>fail</code>, which in the <code>Effect</code> monad simply means “this effect can’t currently be used”.</p></li>
+<li><p>Next, we check where the ball and robot are, and make sure they are both in the same room.</p></li>
+<li><p>Here we couldn’t choose a particular pattern match to use, because picking up a ball should be possible in either room. Instead, we simply observe the location of both the ball and the robot, and use an equality test with <code>guard</code> to make sure they match.</p></li>
+<li><p>If we got this far then we can pick up the ball. The act of picking up the ball is to say that the ball is now in a gripper, and that the gripper is now holding a ball.</p></li>
+<li><p>Finally, we return some domain specific information to use if the solver chooses this effect. This has no impact on the final plan, but it’s information we can use to execute the plan in the real world (e.g., sending actual commands to the robot).</p></li>
+</ol>
+<h4 id="moving-between-rooms">Moving Between Rooms</h4>
+<p>This effect moves the robot to the room adjacent to its current location.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">    moveRobotToAdjacentRoom ::</span> <span class="dt">Effect</span> <span class="dt">Action</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    moveRobotToAdjacentRoom <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>      modifyVar robotLocation adjacent</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span> <span class="dt">SwitchRooms</span></span></code></pre></div>
+<p>This is an “unconditional” effect as we don’t have any explicit guards or pattern matches. We simply flip the current location by an adjacency function.</p>
+<p>Again, we finish by returning some information to use when this effect is chosen.</p>
+<h4 id="dropping-balls">Dropping Balls</h4>
+<p>Finally, we have an effect to drop a ball from a gripper.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">    dropBall ::</span> <span class="dt">Ball</span> <span class="ot">-&gt;</span> <span class="dt">Gripper</span> <span class="ot">-&gt;</span> <span class="dt">Effect</span> <span class="dt">Action</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    dropBall b gripper <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">HoldingBall</span> <span class="ot">&lt;-</span> readVar gripper     <span class="co">-- (1)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">InGripper</span> <span class="ot">&lt;-</span> readVar b</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>      robotRoom <span class="ot">&lt;-</span> readVar robotLocation <span class="co">-- (2)</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>      writeVar gripper <span class="dt">Empty</span>             <span class="co">-- (3)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>      writeVar b (<span class="dt">InRoom</span> robotRoom)      <span class="co">-- (4)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span> <span class="dt">DropBall</span>                    <span class="co">-- (5)</span></span></code></pre></div>
+<ol type="1">
+<li><p>First we check that the given gripper is holding a ball, and the given ball is in a gripper.</p></li>
+<li><p>If we got here then those assumptions hold. We’ll update the location of the ball to be the location of the robot, so first read out the robot’s location.</p></li>
+<li><p>Empty the gripper</p></li>
+<li><p>Move the ball.</p></li>
+<li><p>And we’re done! We’ll just return a tag to indicate that this effect was chosen.</p></li>
+</ol>
+<h2 id="solving-problems">Solving Problems</h2>
+<p>With our problem modelled, we can now attempt to solve it. We invoke <code>solve</code> with a particular search engine (in this case A* with landmark counting heuristics). We give the solver two bits of information:</p>
+<ol type="1">
+<li>A list of all effects - all possible actions the solver can use. These are precisely the effects we defined above, but instantiated for all balls and grippers.</li>
+<li>A goal state. Here we’re using a list comprehension which enumerates all balls, adding the condition that the ball location must be <code>InRoom RoomB</code>.</li>
+</ol>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>  solve</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    cfg</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    ( [ pickUpBallWithGripper b g <span class="op">|</span> b <span class="ot">&lt;-</span> balls, g <span class="ot">&lt;-</span> grippers ]</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span> [ dropBall b g <span class="op">|</span> b <span class="ot">&lt;-</span> balls, g <span class="ot">&lt;-</span> grippers ]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span> [ moveRobotToAdjacentRoom ]</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    [ b <span class="op">?=</span> <span class="dt">InRoom</span> <span class="dt">RoomB</span> <span class="op">|</span> b <span class="ot">&lt;-</span> balls ]</span></code></pre></div>
+<p>So far we’ve been working in the <code>Problem</code> monad. We can escape this monad by using <code>runProblem :: Problem a -&gt; IO a</code>. In our case, <code>a</code> is <code>SolveResult Action</code>, so running the problem might give us a plan (courtesy of <code>solve</code>). If it did, we’ll print the plan.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">&lt;-</span> runProblem problem</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">case</span> res <span class="kw">of</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Solved</span> plan <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">putStrLn</span> <span class="st">&quot;Found a plan!&quot;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>      zipWithM_ </span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        ( \i step <span class="ot">-&gt;</span> <span class="fu">putStrLn</span> ( <span class="fu">show</span> i <span class="op">++</span> <span class="st">&quot;: &quot;</span> <span class="op">++</span> <span class="fu">show</span> step ) ) </span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        [ <span class="dv">1</span><span class="ot">::</span><span class="dt">Int</span> <span class="op">..</span> ] </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        ( totallyOrderedPlan plan )</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    _ <span class="ot">-&gt;</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">putStrLn</span> <span class="st">&quot;Couldn't find a plan!&quot;</span></span></code></pre></div>
+<p><code>fast-downward</code> allows you to extract a totally ordered plan from a solution, but can also provide a <code>partiallyOrderedPlan</code>. This type of plan is a graph (partial order) rather than a list (total order), and attempts to recover some concurrency. For example, if two effects do not interact with each other, they will be scheduled in parallel.</p>
+<h2 id="well-did-it-work">Well, Did it Work?!</h2>
+<p>All that’s left is to run the problem!</p>
+<pre><code>&gt; main
+Found a plan!
+1: PickUpBall
+2: PickUpBall
+3: SwitchRooms
+4: DropBall
+5: DropBall
+6: SwitchRooms
+7: PickUpBall
+8: PickUpBall
+9: SwitchRooms
+10: DropBall
+11: DropBall</code></pre>
+<p>Woohoo! Not bad for 0.02 secs, too :)</p>
+<h2 id="behind-the-scenes">Behind The Scenes</h2>
+<p>It might be interesting to some readers to understand what’s going on behind the scenes. Fast Downward is a C++ program, yet somehow it seems to be running Haskell code with nothing but an <code>Ord</code> instance - there are no marshalling types involved!</p>
+<p>First, let’s understand the input to Fast Downward. Fast Downward requires an encoding in its own SAS format. This format has a list of variables, where each variable contains a list of values. The contents of the values aren’t actually used by the solver, rather it just works with indices into the list of values for a variable. This observations means we can just invent values on the Haskell side and careful manage mapping indices back and forward.</p>
+<p>Next, Fast Downward needs a list of operators which are ground instantiations of our effects above. Ground instantiations of operators mention exact values of variables. Recounting our gripper example, <code>pickUpBallWithGripper b gripper</code> actually produces 2 operators - one for each room. However, we didn’t have to be this specific in the Haskell code, so how are we going to recover this information?</p>
+<p><code>fast-downward</code> actually performs expansion on the given effects to find out <em>all</em> possible ways they could be called, by non-deterministically evaluating them to find a fixed point.</p>
+<p>A small example can be seen in the <code>moveRobotToAdjacentRoom</code> <code>Effect</code>. This will actually produce two operators - one to move from room A to room B, and one to move from room B to room A. The body of this <code>Effect</code> is (once we inline the definition of <code>modifyVar</code>)</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>  readVar robotLocation <span class="op">&gt;&gt;=</span> writeVar robotLocation <span class="op">.</span> adjacent</span></code></pre></div>
+<p>Initially, we only know that <code>robotLocation</code> can take the value <code>RoomA</code>, as that is what the variable was initialised with. So we pass this in, and see what the rest of the computation produces. This means we evaluate <code>adjacent RoomA</code> to yield <code>RoomB</code>, and write <code>RoomB</code> into <code>robotLocation</code>. We’re done for the first pass through this effect, but we gained new information - namely that <code>robotLocation</code> <em>might</em> at some point contain <code>RoomB</code>. Knowing this, we then rerun the effect, but the first <code>readVar</code> gives us two paths:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>readVar robotLocation </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;&gt;=</span> \<span class="dt">RoomA</span> <span class="ot">-&gt;</span> writeVar robotLocation <span class="dt">RoomB</span>                     <span class="co">-- If we read RoomA</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;&gt;=</span> \<span class="dt">RoomB</span> <span class="ot">-&gt;</span> writeVar robotLocation (adjacent <span class="dt">RoomB</span> <span class="ot">-&gt;</span> <span class="dt">RoomA</span>) <span class="co">-- If we read RoomB</span></span></code></pre></div>
+<p>This shows us that <code>robotLocation</code> might also be set to <code>RoomA</code>. However, we already knew this, so at this point we’ve reached a fixed point.</p>
+<p>In practice, this process is ran over all <code>Effect</code>s at the same time because they may interact - a change in one <code>Effect</code> might cause new paths to be found in another <code>Effect</code>. However, because <code>fast-downward</code> only works with finite domain representations, this algorithm always terminates. Unfortunately, I have no way of enforcing this that I can see, which means a user <em>could</em> infinitely loop this normalisation process by writing <code>modifyVar v succ</code>, which would produce an infinite number of variable assignments.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>CircuitHub are using this in production (and I mean real, physical production!) to coordinate activities in its factories. By using AI, we have a declarative interface to the production process – rather than saying what steps are to be performed, we can instead say what state we want to end up in and we can trust the planner to find a suitable way to make it so.</p>
+<p>Haskell really shines here, giving a very powerful way to present problems to the solver. The industry standard is PDDL, a Lisp-like language that I’ve found in practice is less than ideal to actually encode problems. By using Haskell, we:</p>
+<ul>
+<li>Can easily feed the results of the planner into a scheduler to execute the plan, with no messy marshalling.</li>
+<li>Use well known means of abstraction to organise the problem. For example, in the above we use Haskell as a type of macro language – using do notation to help us succinctly formulate the problem.</li>
+<li>Abstract out the details of planning problems so the rest of the team can focus on the domain specific details – i.e., what options are available to the solver, and the domain specific constraints they are subject to.</li>
+</ul>
+<p><a href="https://hackage.haskell.org/package/fast-downward"><code>fast-downward</code></a> is available on Hackage now, and I’d like to express a huge thank you to CircuitHub for giving me the time to explore this large space and to refine my work into the best solution I could think of. This work is the result of numerous iterations, but I think it was worth the wait!</p>
+<h2 id="appendix-code-without-comments">Appendix: Code Without Comments</h2>
+<p>Here is the complete example, as a single Haskell block:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# language DisambiguateRecordFields #-}</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">FastDownward.Examples.Gripper</span> <span class="kw">where</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">FastDownward.Exec</span> <span class="kw">as</span> <span class="dt">Exec</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">FastDownward.Problem</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Room</span> <span class="ot">=</span> <span class="dt">RoomA</span> <span class="op">|</span> <span class="dt">RoomB</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="ot">adjacent ::</span> <span class="dt">Room</span> <span class="ot">-&gt;</span> <span class="dt">Room</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>adjacent <span class="dt">RoomA</span> <span class="ot">=</span> <span class="dt">RoomB</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>adjacent <span class="dt">RoomB</span> <span class="ot">=</span> <span class="dt">RoomA</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">BallLocation</span> <span class="ot">=</span> <span class="dt">InRoom</span> <span class="dt">Room</span> <span class="op">|</span> <span class="dt">InGripper</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">GripperState</span> <span class="ot">=</span> <span class="dt">Empty</span> <span class="op">|</span> <span class="dt">HoldingBall</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Ball</span> <span class="ot">=</span> <span class="dt">Var</span> <span class="dt">BallLocation</span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Gripper</span> <span class="ot">=</span> <span class="dt">Var</span> <span class="dt">GripperState</span></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Action</span> <span class="ot">=</span> <span class="dt">PickUpBall</span> <span class="op">|</span> <span class="dt">SwitchRooms</span> <span class="op">|</span> <span class="dt">DropBall</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>)</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a><span class="ot">problem ::</span> <span class="dt">Problem</span> (<span class="dt">Maybe</span> [<span class="dt">Action</span>])</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>problem <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>  balls <span class="ot">&lt;-</span> replicateM <span class="dv">4</span> (newVar (<span class="dt">InRoom</span> <span class="dt">RoomA</span>))</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>  robotLocation <span class="ot">&lt;-</span> newVar <span class="dt">RoomA</span></span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>  grippers <span class="ot">&lt;-</span> replicateM <span class="dv">2</span> (newVar <span class="dt">Empty</span>)</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span></span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a><span class="ot">    pickUpBallWithGripper ::</span> <span class="dt">Ball</span> <span class="ot">-&gt;</span> <span class="dt">Gripper</span> <span class="ot">-&gt;</span> <span class="dt">Effect</span> <span class="dt">Action</span></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>    pickUpBallWithGripper b gripper <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>      <span class="dt">Empty</span> <span class="ot">&lt;-</span> readVar gripper</span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>      robotRoom <span class="ot">&lt;-</span> readVar robotLocation</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>      ballLocation <span class="ot">&lt;-</span> readVar b</span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a>      guard (ballLocation <span class="op">==</span> <span class="dt">InRoom</span> robotRoom)</span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>      writeVar b <span class="dt">InGripper</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>      writeVar gripper <span class="dt">HoldingBall</span></span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span> <span class="dt">PickUpBall</span></span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a><span class="ot">    moveRobotToAdjacentRoom ::</span> <span class="dt">Effect</span> <span class="dt">Action</span></span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a>    moveRobotToAdjacentRoom <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a>      modifyVar robotLocation adjacent</span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span> <span class="dt">SwitchRooms</span></span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a><span class="ot">    dropBall ::</span> <span class="dt">Ball</span> <span class="ot">-&gt;</span> <span class="dt">Gripper</span> <span class="ot">-&gt;</span> <span class="dt">Effect</span> <span class="dt">Action</span></span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a>    dropBall b gripper <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a>      <span class="dt">HoldingBall</span> <span class="ot">&lt;-</span> readVar gripper</span>
+<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a>      <span class="dt">InGripper</span> <span class="ot">&lt;-</span> readVar b</span>
+<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a>      robotRoom <span class="ot">&lt;-</span> readVar robotLocation</span>
+<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a>      writeVar b (<span class="dt">InRoom</span> robotRoom)</span>
+<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a>      writeVar gripper <span class="dt">Empty</span></span>
+<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span> <span class="dt">DropBall</span></span>
+<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-76"><a href="#cb19-76" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-77"><a href="#cb19-77" aria-hidden="true" tabindex="-1"></a>  solve</span>
+<span id="cb19-78"><a href="#cb19-78" aria-hidden="true" tabindex="-1"></a>    cfg</span>
+<span id="cb19-79"><a href="#cb19-79" aria-hidden="true" tabindex="-1"></a>    ( [ pickUpBallWithGripper b g <span class="op">|</span> b <span class="ot">&lt;-</span> balls, g <span class="ot">&lt;-</span> grippers ]</span>
+<span id="cb19-80"><a href="#cb19-80" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span> [ dropBall b g <span class="op">|</span> b <span class="ot">&lt;-</span> balls, g <span class="ot">&lt;-</span> grippers ]</span>
+<span id="cb19-81"><a href="#cb19-81" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span> [ moveRobotToAdjacentRoom ]</span>
+<span id="cb19-82"><a href="#cb19-82" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-83"><a href="#cb19-83" aria-hidden="true" tabindex="-1"></a>    [ b <span class="op">?=</span> <span class="dt">InRoom</span> <span class="dt">RoomB</span> <span class="op">|</span> b <span class="ot">&lt;-</span> balls ]</span>
+<span id="cb19-84"><a href="#cb19-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-85"><a href="#cb19-85" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-86"><a href="#cb19-86" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb19-87"><a href="#cb19-87" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb19-88"><a href="#cb19-88" aria-hidden="true" tabindex="-1"></a>  plan <span class="ot">&lt;-</span> runProblem problem</span>
+<span id="cb19-89"><a href="#cb19-89" aria-hidden="true" tabindex="-1"></a>  <span class="kw">case</span> plan <span class="kw">of</span></span>
+<span id="cb19-90"><a href="#cb19-90" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Nothing</span> <span class="ot">-&gt;</span></span>
+<span id="cb19-91"><a href="#cb19-91" aria-hidden="true" tabindex="-1"></a>      <span class="fu">putStrLn</span> <span class="st">&quot;Couldn't find a plan!&quot;</span></span>
+<span id="cb19-92"><a href="#cb19-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-93"><a href="#cb19-93" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Just</span> steps <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb19-94"><a href="#cb19-94" aria-hidden="true" tabindex="-1"></a>      <span class="fu">putStrLn</span> <span class="st">&quot;Found a plan!&quot;</span></span>
+<span id="cb19-95"><a href="#cb19-95" aria-hidden="true" tabindex="-1"></a>      zipWithM_ (\i step <span class="ot">-&gt;</span> <span class="fu">putStrLn</span> <span class="op">$</span> <span class="fu">show</span> i <span class="op">++</span> <span class="st">&quot;: &quot;</span> <span class="op">++</span> <span class="fu">show</span> step) [<span class="dv">1</span><span class="ot">::</span><span class="dt">Int</span> <span class="op">..</span>] steps</span>
+<span id="cb19-96"><a href="#cb19-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-97"><a href="#cb19-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-98"><a href="#cb19-98" aria-hidden="true" tabindex="-1"></a><span class="ot">cfg ::</span> <span class="dt">Exec.SearchEngine</span></span>
+<span id="cb19-99"><a href="#cb19-99" aria-hidden="true" tabindex="-1"></a>cfg <span class="ot">=</span></span>
+<span id="cb19-100"><a href="#cb19-100" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Exec.AStar</span> <span class="dt">Exec.AStarConfiguration</span></span>
+<span id="cb19-101"><a href="#cb19-101" aria-hidden="true" tabindex="-1"></a>    { evaluator <span class="ot">=</span></span>
+<span id="cb19-102"><a href="#cb19-102" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Exec.LMCount</span> <span class="dt">Exec.LMCountConfiguration</span></span>
+<span id="cb19-103"><a href="#cb19-103" aria-hidden="true" tabindex="-1"></a>          { lmFactory <span class="ot">=</span></span>
+<span id="cb19-104"><a href="#cb19-104" aria-hidden="true" tabindex="-1"></a>              <span class="dt">Exec.LMExhaust</span> <span class="dt">Exec.LMExhaustConfiguration</span></span>
+<span id="cb19-105"><a href="#cb19-105" aria-hidden="true" tabindex="-1"></a>                { reasonableOrders <span class="ot">=</span> <span class="dt">False</span></span>
+<span id="cb19-106"><a href="#cb19-106" aria-hidden="true" tabindex="-1"></a>                , onlyCausalLandmarks <span class="ot">=</span> <span class="dt">False</span></span>
+<span id="cb19-107"><a href="#cb19-107" aria-hidden="true" tabindex="-1"></a>                , disjunctiveLandmarks <span class="ot">=</span> <span class="dt">True</span></span>
+<span id="cb19-108"><a href="#cb19-108" aria-hidden="true" tabindex="-1"></a>                , conjunctiveLandmarks <span class="ot">=</span> <span class="dt">True</span></span>
+<span id="cb19-109"><a href="#cb19-109" aria-hidden="true" tabindex="-1"></a>                , noOrders <span class="ot">=</span> <span class="dt">False</span></span>
+<span id="cb19-110"><a href="#cb19-110" aria-hidden="true" tabindex="-1"></a>                }</span>
+<span id="cb19-111"><a href="#cb19-111" aria-hidden="true" tabindex="-1"></a>          , admissible <span class="ot">=</span> <span class="dt">False</span></span>
+<span id="cb19-112"><a href="#cb19-112" aria-hidden="true" tabindex="-1"></a>          , optimal <span class="ot">=</span> <span class="dt">False</span></span>
+<span id="cb19-113"><a href="#cb19-113" aria-hidden="true" tabindex="-1"></a>          , pref <span class="ot">=</span> <span class="dt">True</span></span>
+<span id="cb19-114"><a href="#cb19-114" aria-hidden="true" tabindex="-1"></a>          , alm <span class="ot">=</span> <span class="dt">True</span></span>
+<span id="cb19-115"><a href="#cb19-115" aria-hidden="true" tabindex="-1"></a>          , lpSolver <span class="ot">=</span> <span class="dt">Exec.CPLEX</span></span>
+<span id="cb19-116"><a href="#cb19-116" aria-hidden="true" tabindex="-1"></a>          , transform <span class="ot">=</span> <span class="dt">Exec.NoTransform</span></span>
+<span id="cb19-117"><a href="#cb19-117" aria-hidden="true" tabindex="-1"></a>          , cacheEstimates <span class="ot">=</span> <span class="dt">True</span></span>
+<span id="cb19-118"><a href="#cb19-118" aria-hidden="true" tabindex="-1"></a>          }</span>
+<span id="cb19-119"><a href="#cb19-119" aria-hidden="true" tabindex="-1"></a>    , lazyEvaluator <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb19-120"><a href="#cb19-120" aria-hidden="true" tabindex="-1"></a>    , pruning <span class="ot">=</span> <span class="dt">Exec.Null</span></span>
+<span id="cb19-121"><a href="#cb19-121" aria-hidden="true" tabindex="-1"></a>    , costType <span class="ot">=</span> <span class="dt">Exec.Normal</span></span>
+<span id="cb19-122"><a href="#cb19-122" aria-hidden="true" tabindex="-1"></a>    , bound <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb19-123"><a href="#cb19-123" aria-hidden="true" tabindex="-1"></a>    , maxTime <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb19-124"><a href="#cb19-124" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
+<hr />
+<p style="font-style: italic">You can contact me via email
+at <a href="mailto:ollie@ocharles.org.uk">ollie@ocharles.org.uk</a> or tweet to
+me <a href="http://twitter.com/acid2">@acid2</a>. I share almost all of my work
+at <a href="http://github.com/ocharles">GitHub</a>.
+  This <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" rel="dct:type">post</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License</a>.</p>
+<hr />
+
+    <ul id="icons">
+      <li>
+        <a href="https://coderwall.com/ocharles">
+          <img alt="Endorse ocharles on Coderwall" src="http://api.coderwall.com/ocharles/endorsecount.png" style="width: auto" /></a></li>
+      <li>
+        <a href="http://twitter.com/acid2">Twitter
+          <img src="../img/twitter.ico" /></a></li>
+      <li>
+        <a href="https://alpha.app.net/ocharles">App.net
+          <img src="../img/adn.ico" /></a></li>
+      <li>
+        <a href="http://github.com/ocharles">GitHub
+          <img src="../img/github.ico" /></a></li>
+      <li>
+        <a href="http://musicbrainz.org/user/acid2">MusicBrainz
+          <img src="../img/musicbrainz.ico" /></a></li>
+      <li>
+        <a href="http://last.fm/user/acid2">Last.fm
+          <img src="../img/lastfm.ico" /></a></li>
+      <li>
+        <a href="http://www.goodreads.com/user/show/8961303-oliver-charles">
+          GoodReads <img src="../img/goodreads.ico" /></a></li>
+      <li>
+        <a href="http://www.soundcloud.com/bifurcations">
+          SoundCloud (experimental) <img src="../img/soundcloud.ico" /></a></li>
+      <li>
+        <a href="http://www.soundcloud.com/cycles">
+          SoundCloud (older work) <img src="../img/soundcloud.ico" /></a></li>
+      <li>
+        <a href="../posts.rss">RSS (posts)
+          <img src="../img/rss.svg" /></a></li>
+    </ul>
+  </body>
+
+<!-- Mirrored from blog.ocharles.org.uk/posts/2018-12-25-fast-downward.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 01 Aug 2024 22:56:51 GMT -->
+</html>

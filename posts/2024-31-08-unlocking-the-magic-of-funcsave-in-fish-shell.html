@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html>
+  
+<head>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
+    <title>Unlocking the Magic of funcsave in Fish Shell</title>
+    <!-- <link rel='stylesheet' type='text/css' href='/css/reset.css' /> -->
+    <!-- <link rel='stylesheet' type='text/css' href='/css/typography.css' /> -->
+    <link rel='stylesheet' type='text/css' href='../css/syntax-highlighting.css' />
+    <link rel='alternate' type='application/rss+xml' title='RSS' href='../posts.rss'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Slab:300,100' rel='stylesheet' type='text/css'>
+    <style>
+    /*! Typebase.less v0.1.0 | MIT License */
+    /* Setup */
+    html {
+      /* Change default typefaces here */
+      font-size: 125%;
+      -webkit-font-smoothing: antialiased;
+      font-family: 'Roboto Slab', serif;
+      font-weight: 300;
+    }
+    /* Copy & Lists */
+    p, pre {
+      line-height: 1.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0;
+    }
+    ul,
+    ol {
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    ul li,
+    ol li {
+      line-height: 1.5rem;
+    }
+    ul ul,
+    ol ul,
+    ul ol,
+    ol ol {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    blockquote {
+      line-height: 1.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    /* Headings */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      /* Change heading typefaces here */
+      font-weight: 100;
+      margin-top: 1.5rem;
+      margin-bottom: 0;
+      line-height: 1.5rem;
+    }
+    h1 {
+      font-size: 3.242rem;
+      line-height: 4.5rem;
+      margin-top: 3rem;
+      text-align: center;
+      padding-bottom: 1.5rem;
+    }
+    h2 {
+      font-size: 2.828rem;
+      line-height: 3rem;
+      margin-top: 3rem;
+    }
+    h3 {
+      font-size: 1.414rem;
+    }
+    h4 {
+      font-size: 0.707rem;
+    }
+    h5 {
+      font-size: 0.4713333333333333rem;
+    }
+    h6 {
+      font-size: 0.3535rem;
+    }
+    /* Tables */
+    table {
+      margin-top: 1.5rem;
+      border-spacing: 0px;
+      border-collapse: collapse;
+    }
+    table td,
+    table th {
+      padding: 0;
+      line-height: 33px;
+    }
+    /* Leading paragraph text */
+    .lead {
+      font-size: 1.414rem;
+    }
+    /* Hug the block above you */
+    .hug {
+      margin-top: 0;
+    }
+
+    html {
+      background: #eae3cb;
+    }
+    body {
+      background-color: #fcf4dc;
+      width: 40em;
+      margin: 0 auto 2em;
+      padding: 2em 3em;
+      border: 1px solid #d9d2ba;
+      border-top: none;
+      color: #111;
+    }
+    h1 {
+      border-bottom: 1px solid #555;
+      /*text-align: center;
+      padding-bottom: 10px;*/
+    }
+    /* h2,h3 { margin-top: 2em } */
+    ul#icons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      list-style-type: none;
+      text-align: right;
+    }
+    ul#icons img { width: 16px; vertical-align: middle; }
+    ul#icons a { color: transparent; font-style: italic; font-size: small; }
+    ul#icons li:hover a { color: #aaa; text-decoration: none !important}
+    #TOC { display: none; }
+    pre {
+      border-bottom: 1px dotted #d9d2ba;
+      border-top: 1px dotted #d9d2ba;
+    }
+     a {
+         text-decoration: none;
+     }
+    </style>
+  </head>
+  <body>
+    <h1>Unlocking the Magic of <code class="code">funcsave</code> in Fish Shell: Your New Best Friend in Command Line Sorcery</h1>
+    <p>Hey there, Fish enthusiast! So, you've taken the plunge into the sea of Fish shell goodness, huh? Welcome! You’re probably already loving those cool autocompletions, the beautiful syntax highlighting, and the all-around smoother command-line experience. But wait, there’s more! Today, let's talk about something that’s going to make your Fish shell life even sweeter: <code class="code">funcsave</code>.</p>
+
+    <h2>So, What's the Deal with <code class="code">funcsave</code>?</h2>
+
+    <p>Alright, let's break this down. If you’re like me, you’ve probably created a bunch of handy little functions in Fish to make your life easier. Maybe you've got a function to clean up those pesky temp files, or perhaps you’ve crafted a custom greeting script because you’re all about those personal touches. But what happens to those functions when you close your terminal? Poof! Gone, just like that. And that’s where <code class="code">funcsave</code> comes in.</p>
+
+    <h2>Why <code class="code">funcsave</code> is Your New BFF</h2>
+
+    <p>Think of <code class="code">funcsave</code> as that one friend who always remembers your birthday (and actually sends a card). This command saves your functions so that you don’t have to recreate them every time you open a new terminal session. It’s like magic, but better because it’s real!</p>
+
+    <p>Here’s how it works: When you use <code class="code">funcsave</code>, Fish shell takes your nifty function and saves it to a file in <code class="code">~/.config/fish/functions/</code>. This means the next time you launch Fish, your function is right there, waiting for you, like a loyal puppy.</p>
+
+    <h2>Let’s Do This: Saving a Function with <code class="code">funcsave</code></h2>
+
+    <p>Okay, let’s get our hands dirty. Say you’ve written a simple function called <code class="code">greet</code> that says hello to whoever you tell it to:</p>
+
+    <pre><code class="code">function greet
+        echo "Hello, $argv!"
+    end
+    </code></pre>
+
+    <p>Now, you don’t want to lose this masterpiece, right? Just type:</p>
+
+    <pre><code class="code">funcsave greet</code></pre>
+
+    <p>And voilà! Your <code class="code">greet</code> function is saved to <code class="code">~/.config/fish/functions/greet.fish</code>. Next time you open your terminal, it’s there, ready to greet the world!</p>
+
+    <h2>Why You’ll Love <code class="code">funcsave</code></h2>
+
+    <p>Honestly, once you start using <code class="code">funcsave</code>, you’ll wonder how you ever got by without it. It’s a tiny command with a big impact. No more rewriting functions. No more wasted time. It’s all about keeping things easy and efficient. Just think about it: You’re building your own little toolkit, custom-fit to your workflow, and it’s there whenever you need it.</p>
+
+    <div class="tips">
+        <h3>Pro Tips for Becoming a <code class="code">funcsave</code> Pro</h3>
+        <p>Now that you’re on board, here are some tips to make the most out of <code class="code">funcsave</code>:</p>
+        <ul>
+            <li><strong>Name Smartly:</strong> Give your functions meaningful names. You’ll thank yourself later. For instance, instead of naming your function <code class="code">foo</code>, go for something like <code class="code">backup-photos</code>.</li>
+            <li><strong>Declutter Regularly:</strong> Your <code class="code">functions</code> directory can get messy. Do a quick cleanup every now and then to remove functions you don’t use anymore.</li>
+            <li><strong>Version Control for the Win:</strong> If you’re diving deep into scripting, consider version-controlling your Fish configuration, including your functions. This way, you can experiment without fear of losing your setup.</li>
+            <li><strong>Edit Functions with <code class="code">funced</code>:</strong> Need to tweak a function? No problem. Just use <code class="code">funced</code> followed by the function name:</li>
+            <pre><code class="code">funced greet</code></pre>
+            <p>Then save it again with <code class="code">funcsave</code>. Easy peasy!</p>
+            <li><strong>Share Your Functions:</strong> Got a function that you think others could use? Share it with the community! The Fish shell community is always ready to welcome new ideas.</li>
+        </ul>
+    </div>
+
+    <h2>The Bottom Line</h2>
+
+    <p>At the end of the day, <code class="code">funcsave</code> is one of those little gems that makes Fish shell so great. It’s not flashy, but it’s incredibly useful. So go ahead, start saving your functions like a pro, and make your Fish shell experience even more awesome. You’ve got this!</p>
+
+    <p>Now go out there and make some Fish magic happen!</p>
+<p style='font-style: italic'>You can contact me via email
+at <a href='mailto:sudotoo@protonmail.com'>sudotoo@protonmail.com</a> or tweet to
+me <a href='http://x.com/otechai'>@otechai</a>. I share almost all of my work
+at <a href='http://github.com/fa5tworm'>GitHub</a>.
+  This <span xmlns:dct='http://purl.org/dc/terms/' href='http://purl.org/dc/dcmitype/Text' rel='dct:type'>post</span> is licensed under a <a rel='license' href='http://creativecommons.org/licenses/by-nc-nd/3.0/'>Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License</a>.</p>
+<hr />
+
+    <ul id='icons'>
+      <li>
+        <a href='http://x.com/otechai'>Twitter
+          <img src='../img/twitter.ico' /></a></li>
+      <li>
+        <a href='https://github.com/fa5tworm'>GitHub
+          <img src='../img/github.ico' /></a></li>
+      <li>
+  </body>
+
+</html>
